@@ -65,6 +65,7 @@ services:
       - joomla_data:/var/www/html
       - joomla_logs:/var/log/apache2
       - ./joomla/apache/zz-observabilidad.conf:/etc/apache2/conf-enabled/zz-observabilidad.conf:ro,z
+      - ./joomla/assets:/var/www/html/images/custom:ro,z
     networks:
       frontend_net:
         ipv4_address: 172.28.10.3
@@ -178,6 +179,23 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  joomla-seed:
+    image: python:3.12-slim
+    container_name: comm_joomla_seed
+    depends_on:
+      joomla:
+        condition: service_healthy
+    environment:
+      JOOMLA_URL: http://joomla
+      JOOMLA_ADMIN_USERNAME: ${JOOMLA_ADMIN_USERNAME:-administrador}
+      JOOMLA_ADMIN_PASSWORD: ${JOOMLA_ADMIN_PASSWORD:-Comm2026_Joomla_Admin}
+    volumes:
+      - ./scripts/seed_articulo.py:/seed/seed_articulo.py:ro
+    command: ["sh", "-c", "pip install --quiet requests && python /seed/seed_articulo.py"]
+    networks:
+      - frontend_net
+    restart: "no"
 
 networks:
   frontend_net:
